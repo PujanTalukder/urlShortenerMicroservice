@@ -28,10 +28,7 @@ mongoose.connect(
 
 // define url schema
 let urlSchema = new mongoose.Schema({
-  url_code: {
-    type: String,
-    default: 0,
-  },
+  url_code: String,
   original_url: {
     type: String,
     required: true,
@@ -55,15 +52,6 @@ app.get("/", function (req, res) {
   res.sendFile(process.cwd() + "/views/index.html");
 });
 
-// url code incrementer function
-const autoIncrementer = (curr) => {
-  if (curr == 1) {
-    return curr++;
-  } else {
-    return 1;
-  }
-};
-
 // Your first API endpoint
 app.post("/api/shorturl", (req, res) => {
   let original_url = req.body.url;
@@ -85,12 +73,7 @@ app.post("/api/shorturl", (req, res) => {
         });
       } else {
         // if the url is valid then we will create a short id
-        let url_code;
-        if (url_object.url_code) {
-          let curr = url_object.url_code;
-          url_code = autoIncrementer(curr);
-        }
-
+        const url_code = shortId.generate();
         console.log(url_code);
         let short_url = `${hostname}/api/shorturl/${url_code}`;
         let url_object = Url({
