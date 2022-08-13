@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
-const validUrl = require("valid-url");
+const isUrlValid = require("url-validation");
 const shortId = require("shortid");
 const app = express();
 
@@ -27,7 +27,7 @@ mongoose.connect(
 );
 
 // define url schema
-let urlSchema = new mongoose.Schema({
+let uriSchema = new mongoose.Schema({
   url_code: String,
   original_url: {
     type: String,
@@ -39,7 +39,7 @@ let urlSchema = new mongoose.Schema({
 });
 
 // create url model from urlSchema
-let Url = mongoose.model("Url", urlSchema);
+let Uri = mongoose.model("Uri", uriSchema);
 
 app.use(cors());
 
@@ -57,14 +57,14 @@ app.post("/api/shorturl", (req, res) => {
   let original_url = req.body.url;
   let hostname = req.headers.host;
   // check if base url is valid or not
-  if (!validUrl.isUri(hostname)) {
+  if (isUrlValid(hostname)) {
     res.status(401).json({ error: "invalid url" });
   }
 
   // check if the requested url is valid or not
-  if (validUrl.isUri(original_url)) {
+  if (isUrlValid(original_url)) {
     // check if url requested url already exists or not
-    Url.findOne({ original_url: original_url }).then((url_object) => {
+    Uri.findOne({ original_url: original_url }).then((url_object) => {
       if (url_object) {
         console.log("findone block");
         res.json({
@@ -76,7 +76,7 @@ app.post("/api/shorturl", (req, res) => {
         const url_code = shortId.generate();
         console.log(url_code);
         let short_url = `${hostname}/api/shorturl/${url_code}`;
-        let url_object = Url({
+        let url_object = Uri({
           url_code,
           original_url,
           short_url,
@@ -97,7 +97,7 @@ app.post("/api/shorturl", (req, res) => {
 app.get("/api/shorturl/:urlCode", async (req, res) => {
   const code = req.params.urlCode;
 
-  const url_object = await Url.findOne({ url_code: code });
+  const url_object = await Uri.findOne({ url_code: code });
 
   if (url_object) {
     return res.redirect(url_object.original_url);
